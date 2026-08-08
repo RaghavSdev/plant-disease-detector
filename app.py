@@ -35,6 +35,7 @@ def predict():
         return "No file selected", 400
         
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     file.save(filepath)
 
     # Load and preprocess image
