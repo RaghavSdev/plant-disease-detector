@@ -1,13 +1,17 @@
 import os
 import numpy as np
+import onnxruntime as ort
 from flask import Flask, render_template, request
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
+from PIL import Image
 
 app = Flask(__name__)
-model = load_model("mango_leaf_disease_model.h5")  # Load your trained model
 
-# Your class labels (order matters)
+# Load ONNX model with minimal RAM footprint (<50MB)
+session = ort.InferenceSession("model.onnx")
+input_name = session.get_inputs()[0].name
+output_name = session.get_outputs()[0].name
+
+# Class labels (order matters)
 class_labels = [
     'Pepper__bell___Bacterial_spot', 'Pepper__bell___healthy',
     'Potato___Early_blight', 'Potato___healthy', 'Potato___Late_blight',
@@ -38,13 +42,13 @@ def predict():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     file.save(filepath)
 
-    # Load and preprocess image
-    img = image.load_img(filepath, target_size=(200, 200))
-    img_array = image.img_to_array(img) / 255.0
+    # Load and preprocess image with PIL & numpy (ultra fast, low memory)
+    img = Image.open(filepath).convert('RGB').resize((200, 200))
+    img_array = np.array(img, dtype=np.float32) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Direct callable model forward pass (much faster and avoids dataset allocation/OOM/timeout in Gunicorn)
-    prediction = model(img_array, training=False).numpy()
+    # Fast ONNX inference
+    prediction = session.run([output_name], {input_name: img_array})[0]
     pred_idx = int(np.argmax(prediction[0])) if prediction.ndim > 1 else int(np.argmax(prediction))
     predicted_class = class_labels[pred_idx] if pred_idx < len(class_labels) else f"Class {pred_idx}"
     confidence = round(float(100 * np.max(prediction)), 2)
