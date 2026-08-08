@@ -1,0 +1,9 @@
+plantVillage/
+node_modules/
+capture.js
+package.json
+package-lock.json
+static/uploads/*
+!static/uploads/.gitkeep
+__pycache__/
+*.pyc
