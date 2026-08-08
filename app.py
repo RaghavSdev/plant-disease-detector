@@ -43,9 +43,11 @@ def predict():
     img_array = image.img_to_array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    prediction = model.predict(img_array)
-    predicted_class = class_labels[np.argmax(prediction)]
-    confidence = round(100 * np.max(prediction), 2)
+    # Direct callable model forward pass (much faster and avoids dataset allocation/OOM/timeout in Gunicorn)
+    prediction = model(img_array, training=False).numpy()
+    pred_idx = int(np.argmax(prediction[0])) if prediction.ndim > 1 else int(np.argmax(prediction))
+    predicted_class = class_labels[pred_idx] if pred_idx < len(class_labels) else f"Class {pred_idx}"
+    confidence = round(float(100 * np.max(prediction)), 2)
 
     return render_template('index.html',
                            prediction=predicted_class,
