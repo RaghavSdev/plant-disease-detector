@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Step 1: Set base directory (download & extract manually or via your own code if zipped)
-base_dir = 'plantVillage'  # Change this to your dataset path
+base_dir = 'plantVillage/PlantVillage'  # Correct dataset path
 
 # Step 2: Display a sample image
 # Loads and displays one random image from the dataset.

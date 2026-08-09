@@ -5,5 +5,9 @@ package.json
 package-lock.json
 static/uploads/*
 !static/uploads/.gitkeep
+static/samples/
+*.h5
+*.tflite
 __pycache__/
 *.pyc
+
